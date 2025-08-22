@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { TodoItems } from "./TodoItems";
+import Swal from "sweetalert2";
 
 export const ToDoList = () => {
   const [todoList, setTodoList] = useState(
@@ -7,43 +8,73 @@ export const ToDoList = () => {
       ? JSON.parse(localStorage.getItem("todos"))
       : []
   );
-  const [editingId, setEditingId] = useState(null); 
+  const [editingId, setEditingId] = useState(null);
   const inputRef = useRef();
 
-  const add = () => {
-    const inputText = inputRef.current.value.trim();
-    if (inputText === "") return;
+ 
 
-    if (editingId) {
-      setTodoList((prev) =>
-        prev.map((todo) =>
-          todo.id === editingId ? { ...todo, text: inputText } : todo
-        )
-      );
-      setEditingId(null);
-    } else {
-      const newTodo = {
-        id: Date.now(),
-        text: inputText,
-        isComplete: false,
-      };
-      setTodoList((prev) => [...prev, newTodo]);
-    }
+const add = () => {
+  const inputText = inputRef.current.value.trim();
+  if (inputText === "") return;
 
-    inputRef.current.value = "";
-  };
-
-  const deleteItem = (id) => {
-    setTodoList((prevTodo) => prevTodo.filter((todo) => todo.id !== id));
-  };
-
-  const toggle = (id) => {
-    setTodoList((prevTodo) =>
-      prevTodo.map((todo) =>
-        todo.id === id ? { ...todo, isComplete: !todo.isComplete } : todo
+  if (editingId) {
+    setTodoList((prev) =>
+      prev.map((todo) =>
+        todo.id === editingId ? { ...todo, text: inputText } : todo
       )
     );
-  };
+    setEditingId(null);
+    Swal.fire("Updated!", "Your task was updated.", "success");
+  } else {
+    const newTodo = {
+      id: Date.now(),
+      text: inputText,
+      isComplete: false,
+    };
+    setTodoList((prev) => [...prev, newTodo]);
+    Swal.fire("Added!", "New task added successfully.", "success");
+  }
+
+  inputRef.current.value = "";
+};
+
+const deleteItem = (id) => {
+  Swal.fire({
+    title: "Are you sure?",
+    text: "This task will be deleted!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, delete it!"
+  }).then((result) => {
+    if (result.isConfirmed) {
+      setTodoList((prevTodo) => prevTodo.filter((todo) => todo.id !== id));
+      Swal.fire("Deleted!", "Your task has been deleted.", "success");
+    }
+  });
+};
+
+const toggle = (id) => {
+  setTodoList((prevTodo) =>
+    prevTodo.map((todo) => {
+      if (todo.id === id) {
+        const updated = { ...todo, isComplete: !todo.isComplete };
+
+        if (updated.isComplete) {
+          Swal.fire("✅ Completed!", "Task is marked as completed.", "success");
+        } else {
+          Swal.fire("↩️ Unchecked!", "Task is marked as incomplete.", "info");
+        }
+
+        return updated;
+      }
+      return todo;
+    })
+  );
+};
+
+
 
   const editItem = (id, text) => {
     inputRef.current.value = text;
@@ -59,7 +90,9 @@ export const ToDoList = () => {
       {/* Title */}
       <div className="flex gap-2 items-center justify-center py-3">
         <i className="fa-solid fa-clipboard-list text-xl sm:text-2xl text-[#493628]"></i>
-        <h1 className="text-2xl sm:text-3xl font-bold text-[#493628]">To Do List</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[#493628]">
+          To Do List
+        </h1>
       </div>
 
       {/* Input box */}
